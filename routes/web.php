@@ -21,3 +21,7 @@ Route::get('/smtp/test', [SmtpTestController::class, 'index'])->name('smtp.test'
 Route::post('/smtp/start', [SmtpTestController::class, 'start']);
 Route::get('/smtp/poll/{batchId}', [SmtpTestController::class, 'poll']);
 Route::post('/smtp/run-next', [SmtpTestController::class, 'runNext']);
+
+Route::get('/html-preview', function () {
+    return view('html_preview');
+})->name('html.preview');

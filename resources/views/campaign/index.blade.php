@@ -226,6 +226,10 @@
                 <a href="{{ route('smtp.test') }}" class="btn btn-primary btn-lg shadow-sm">
                     <i class="fas fa-vial me-2"></i> Test SMTP Servers
                 </a>
+                <a href="{{ route('html.preview') }}" class="btn btn-primary fw-semibold">
+                    <i class="fas fa-code me-2"></i> Open HTML Preview Tool
+                </a>
+
             </div>
         </div>
     </div>
