@@ -141,11 +141,71 @@
                         </form>
                     @endif
 
-                    @if($campaign->status === 'paused')
-                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#updateSmtpModal">
-                            SMTPs
-                        </button>
+                    @if ($campaign->status === 'paused')
+                        <div class="d-flex gap-2 mt-3">
+                            <!-- SMTPs Modal Trigger -->
+                            <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#updateSmtpModal">
+                                <i class="fas fa-server me-1"></i> SMTPs
+                            </button>
+
+                            <!-- Campaign Update Modal Trigger -->
+                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#updateCampaignModal">
+                                <i class="fas fa-edit me-1"></i> Edit Campaign
+                            </button>
+                        </div>
+
+                        <!-- Campaign Update Modal -->
+                        <div class="modal fade" id="updateCampaignModal" tabindex="-1"
+                            aria-labelledby="updateCampaignModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content shadow-lg border-0 rounded-3">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title" id="updateCampaignModalLabel">
+                                            ✏️ Update Campaign Content
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+
+                                    <form action="{{ route('campaign.update', $campaign->id) }}" method="POST">
+                                        @csrf
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="subject" class="form-label fw-semibold">Subject</label>
+                                                <input type="text" name="subject" id="subject" class="form-control"
+                                                    value="{{ old('subject', $campaign->subject) }}" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="from_name" class="form-label fw-semibold">From Name</label>
+                                                <input type="text" name="from_name" id="from_name" class="form-control"
+                                                    value="{{ old('from_name', $campaign->from_name) }}">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="html_body" class="form-label fw-semibold">HTML Body</label>
+                                                <textarea name="html_body" id="html_body" rows="8" class="form-control"
+                                                    required>{{ old('html_body', $campaign->html_body) }}</textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                Cancel
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                💾 Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     @endif
+
+
 
                     <form action="{{ route('campaign.destroy', $campaign->id) }}" method="POST" class="d-inline">
                         @csrf @method('DELETE')
@@ -252,8 +312,8 @@
                                                 <div class="modal-body">
                                                     <pre class="bg-dark text-light p-3 rounded"
                                                         style="max-height: 60vh; overflow: auto; font-size: 0.8em; white-space: pre-wrap;">
-                                            {{ $debugEntry['debug'] }}
-                                                                        </pre>
+                                                            {{ $debugEntry['debug'] }}
+                                                                                        </pre>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <small class="text-muted">
@@ -305,72 +365,73 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    let polling = true;
-    const totalEmails = {{ $campaign->total_emails }};
-    let lastLogCount = {{ count($campaign->log ?? []) }};
+    <script>
+        let polling = true;
+        const totalEmails = {{ $campaign->total_emails }};
+        let lastLogCount = {{ count($campaign->log ?? []) }};
 
-    function updateUI(data) {
-        // Update stats
-        document.getElementById('sent').textContent = data.sent;
-        document.getElementById('failed').textContent = data.failed;
-        document.getElementById('processed').textContent = data.sent + data.failed;
+        function updateUI(data) {
+            // Update stats
+            document.getElementById('sent').textContent = data.sent;
+            document.getElementById('failed').textContent = data.failed;
+            document.getElementById('processed').textContent = data.sent + data.failed;
 
-        // Progress
-        const progress = totalEmails > 0 ? ((data.sent + data.failed) / totalEmails * 100) : 0;
-        const bar = document.getElementById('progress-bar');
-        bar.style.width = progress + '%';
-        document.getElementById('progress-text').textContent = (data.sent + data.failed) + ' / ' + totalEmails;
+            // Progress
+            const progress = totalEmails > 0 ? ((data.sent + data.failed) / totalEmails * 100) : 0;
+            const bar = document.getElementById('progress-bar');
+            bar.style.width = progress + '%';
+            document.getElementById('progress-text').textContent = (data.sent + data.failed) + ' / ' + totalEmails;
 
-        // Status
-        const statusText = document.getElementById('status-text');
-        if (data.status === 'completed') {
-            statusText.innerHTML = '<span class="text-success">Completed</span>';
-            bar.className = 'progress-bar bg-success';
-            polling = false;
-        } else if (data.status === 'running') {
-            statusText.textContent = 'Sending...';
-        } else if (data.status === 'paused') {
-            statusText.textContent = 'Paused';
-        }
-
-        // === ONLY ADD NEW LOG LINES (DON'T REPLACE) ===
-        const logContainer = document.getElementById('simple-log');
-        const currentLines = logContainer.children.length;
-        if (data.logHtml.length > currentLines) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = data.logHtml;
-            const newLines = Array.from(tempDiv.children).slice(currentLines);
-            newLines.forEach(line => logContainer.appendChild(line));
-        }
-
-        // Show download button
-        if (data.failed > 0 && data.status === 'completed') {
-            const container = document.getElementById('failed-download-container');
-            container.style.display = 'inline-block';
-            document.getElementById('failed-count-live').textContent = data.failed;
-        }
-    }
-
-    function poll() {
-        if (!polling) return;
-
-        fetch("{{ route('campaign.show', $campaign->id) }}?ajax=1", {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            updateUI(data);
-            if (data.sent + data.failed >= totalEmails) {
-                setTimeout(poll, 1000); // Final poll
+            // Status
+            const statusText = document.getElementById('status-text');
+            if (data.status === 'completed') {
+                statusText.innerHTML = '<span class="text-success">Completed</span>';
+                bar.className = 'progress-bar bg-success';
+                polling = false;
+            } else if (data.status === 'running') {
+                statusText.textContent = 'Sending...';
+            } else if (data.status === 'paused') {
+                statusText.textContent = 'Paused';
+                polling = false;
             }
-        })
-        .catch(() => polling = false);
-    }
 
-    setInterval(poll, 2000);
-    poll();
-</script>
+            // === ONLY ADD NEW LOG LINES (DON'T REPLACE) ===
+            const logContainer = document.getElementById('simple-log');
+            const currentLines = logContainer.children.length;
+            if (data.logHtml.length > currentLines) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.logHtml;
+                const newLines = Array.from(tempDiv.children).slice(currentLines);
+                newLines.forEach(line => logContainer.appendChild(line));
+            }
+
+            // Show download button
+            if (data.failed > 0 && data.status === 'completed') {
+                const container = document.getElementById('failed-download-container');
+                container.style.display = 'inline-block';
+                document.getElementById('failed-count-live').textContent = data.failed;
+            }
+        }
+
+        function poll() {
+            if (!polling) return;
+
+            fetch("{{ route('campaign.show', $campaign->id) }}?ajax=1", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(r => r.json())
+                .then(data => {
+                    updateUI(data);
+                    if (data.sent + data.failed >= totalEmails) {
+                        setTimeout(poll, 1000); // Final poll
+                    }
+                })
+                .catch(() => polling = false);
+        }
+
+        setInterval(poll, 2000);
+        poll();
+    </script>
 </body>
 
 </html>
@@ -384,7 +445,7 @@
         $debugLogs = \App\Models\DebugLog::where('campaign_id', $campaign->id)
             ->get()
             ->keyBy('email')
-            ->map(function($log) {
+            ->map(function ($log) {
                 return [
                     'id' => $log->id,
                     'email' => $log->email,
@@ -409,30 +470,30 @@
             $debugBtn = '';
             if ($debugEntry && $debugEntry['debug']) {
                 $debugBtn = "
-                    <button class='btn btn-sm btn-outline-info debug-btn' data-bs-toggle='modal'
-                        data-bs-target='#debugModal{$debugEntry['id']}'>Debug</button>
-                    <div class='modal fade' id='debugModal{$debugEntry['id']}' tabindex='-1'>
-                        <div class='modal-dialog modal-lg'>
-                            <div class='modal-content'>
-                                <div class='modal-header'>
-                                    <h5 class='modal-title'>SMTP Debug: {$email}</h5>
-                                    <button type='button' class='btn-close' data-bs-dismiss='modal'></button>
+                            <button class='btn btn-sm btn-outline-info debug-btn' data-bs-toggle='modal'
+                                data-bs-target='#debugModal{$debugEntry['id']}'>Debug</button>
+                            <div class='modal fade' id='debugModal{$debugEntry['id']}' tabindex='-1'>
+                                <div class='modal-dialog modal-lg'>
+                                    <div class='modal-content'>
+                                        <div class='modal-header'>
+                                            <h5 class='modal-title'>SMTP Debug: {$email}</h5>
+                                            <button type='button' class='btn-close' data-bs-dismiss='modal'></button>
+                                        </div>
+                                        <div class='modal-body'>
+                                            <pre class='bg-dark text-light p-3 rounded' style='max-height: 60vh; overflow: auto; font-size: 0.8em; white-space: pre-wrap;'>"
+                    . htmlspecialchars($debugEntry['debug']) .
+                    "</pre>
+                                        </div>
+                                        <div class='modal-footer'>
+                                            <small class='text-muted'>
+                                                SMTP: {$debugEntry['smtp_username']} |
+                                                Status: <strong>" . ucfirst($debugEntry['status']) . "</strong> |
+                                                " . \Carbon\Carbon::parse($debugEntry['created_at'])->format('H:i:s') . "
+                                            </small>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class='modal-body'>
-                                    <pre class='bg-dark text-light p-3 rounded' style='max-height: 60vh; overflow: auto; font-size: 0.8em; white-space: pre-wrap;'>"
-                                    . htmlspecialchars($debugEntry['debug']) .
-                                    "</pre>
-                                </div>
-                                <div class='modal-footer'>
-                                    <small class='text-muted'>
-                                        SMTP: {$debugEntry['smtp_username']} |
-                                        Status: <strong>" . ucfirst($debugEntry['status']) . "</strong> |
-                                        " . \Carbon\Carbon::parse($debugEntry['created_at'])->format('H:i:s') . "
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>";
+                            </div>";
             } else {
                 $debugBtn = "<span class='text-muted small'>No debug</span>";
             }
@@ -442,10 +503,10 @@
     @endphp
 
     {!! response()->json([
-        'sent' => $campaign->sent,
-        'failed' => $campaign->failed,
-        'status' => $campaign->status,
-        'logHtml' => $logLines ?: '<div class="text-center text-muted py-4"><p>No activity yet...</p></div>'
-    ])->getContent() !!}
+            'sent' => $campaign->sent,
+            'failed' => $campaign->failed,
+            'status' => $campaign->status,
+            'logHtml' => $logLines ?: '<div class="text-center text-muted py-4"><p>No activity yet...</p></div>'
+        ])->getContent() !!}
     @php exit; @endphp
 @endif

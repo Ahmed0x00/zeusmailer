@@ -13,4 +13,6 @@ Route::post('/campaign/{id}/toggle', [CampaignController::class, 'toggleStatus']
 Route::post('/campaign/{id}/update-smtps', [CampaignController::class, 'updateSmtps'])->name('campaign.update-smtps');
 Route::get('/campaign/{id}/export-failed', [CampaignController::class, 'exportFailedEmails'])
     ->name('campaign.export-failed');
+Route::post('/campaigns/{id}/update', [App\Http\Controllers\CampaignController::class, 'updateCampaign'])
+    ->name('campaign.update');
 

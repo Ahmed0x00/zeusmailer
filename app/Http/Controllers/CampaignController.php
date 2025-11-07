@@ -95,7 +95,7 @@ class CampaignController extends Controller
         foreach ($uniqueEmails as $index => $email) {
             $smtp = $smtps[$index % count($smtps)];
             SendCampaignEmail::dispatch($email, $campaign->id, $smtp);
-                // ->onQueue($campaign->queue_name); // ⚡ no per-index delay
+            // ->onQueue($campaign->queue_name); // ⚡ no per-index delay
         }
 
         return redirect()
@@ -144,11 +144,11 @@ class CampaignController extends Controller
         $campaign->status = $newStatus;
         $campaign->save();
 
-        if ($newStatus === 'paused') {
-            // 🧨 Kill pending jobs (not yet processed)
-            DB::table('jobs')->where('queue', $campaign->queue_name)->delete();
-            $this->addLog("Paused campaign — cleared pending jobs from {$campaign->queue_name}", $campaign);
-        }
+        // if ($newStatus === 'paused') {
+        //     // 🧨 Kill pending jobs (not yet processed)
+        //     DB::table('jobs')->where('queue', $campaign->queue_name)->delete();
+        //     $this->addLog("Paused campaign — cleared pending jobs from {$campaign->queue_name}", $campaign);
+        // }
 
         if ($newStatus === 'running' && $oldStatus === 'paused') {
             $smtpInput = $campaign->smtp_input_updated ?: $campaign->smtp_input;
@@ -161,7 +161,7 @@ class CampaignController extends Controller
                 : (json_decode($campaign->processed_emails, true) ?? []);
 
             // Resume from current_index + 1
-            $unsentEmails = array_slice($allEmails, $campaign->current_index + 1);
+            $unsentEmails = array_slice($allEmails, $campaign->current_index);
 
             if (empty($unsentEmails)) {
                 $this->addLog("Resumed - no remaining emails", $campaign);
@@ -171,10 +171,10 @@ class CampaignController extends Controller
             foreach ($unsentEmails as $index => $email) {
                 $smtp = $smtps[$index % count($smtps)];
                 SendCampaignEmail::dispatch($email, $campaign->id, $smtp);
-                    // ->onQueue($campaign->queue_name);
+                // ->onQueue($campaign->queue_name);
             }
 
-            $this->addLog("Resumed campaign — dispatched " . count($unsentEmails) . " remaining emails", $campaign);
+            $this->addLog("Resumed campaign — dispatched " . count($unsentEmails) - 1 . " remaining emails", $campaign);
         }
 
         $action = strtoupper($newStatus);
@@ -242,6 +242,33 @@ class CampaignController extends Controller
 
         return back()->with('success', 'SMTPs updated! They will be used when you resume.');
     }
+
+    public function updateCampaign(Request $request, $id)
+    {
+        $campaign = Campaign::findOrFail($id);
+
+        if ($campaign->status !== 'paused') {
+            return back()->with('error', 'You can only edit a campaign while it’s paused.');
+        }
+
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'html_body' => 'required|string',
+            'from_name' => 'nullable|string|max:255',
+        ]);
+
+        $campaign->update([
+            'subject' => $request->subject,
+            'html_body' => $request->html_body,
+            'from_name' => $request->from_name ?? $campaign->from_name,
+        ]);
+
+        $this->addLog('Campaign details updated while paused.', $campaign);
+
+        return back()->with('success', 'Campaign content updated successfully!');
+    }
+
+
     private function addLog($message, $campaign)
     {
         $log = $campaign->log ?? [];
