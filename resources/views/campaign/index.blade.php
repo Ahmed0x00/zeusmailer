@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,7 @@
 
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
@@ -211,6 +212,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Header -->
@@ -220,6 +222,9 @@
                 <h1><i class="fas fa-bolt"></i> ZeusMailer</h1>
                 <a href="{{ route('campaign.create') }}" class="btn-new">
                     <i class="fas fa-plus me-1"></i> New Campaign
+                </a>
+                <a href="{{ route('smtp.test') }}" class="btn btn-primary btn-lg shadow-sm">
+                    <i class="fas fa-vial me-2"></i> Test SMTP Servers
                 </a>
             </div>
         </div>
@@ -239,6 +244,8 @@
                 </div>
             </div>
         @else
+
+
             <div class="row g-4">
                 @foreach($campaigns as $c)
                     <div class="col-md-6 col-lg-4">
@@ -261,10 +268,11 @@
                                     <a href="{{ route('campaign.show', $c->id) }}" class="btn-action btn-view">
                                         <i class="fas fa-eye me-1"></i> View
                                     </a>
+                                    <span>Status: {{ $c->status }}</span>
                                     <form action="{{ route('campaign.destroy', $c->id) }}" method="POST" class="d-inline w-100">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn-action btn-delete w-100"
+                                        <button type="submit" class="btn-action btn-delete w-80"
                                             onclick="return confirm('Delete campaign #{{ $c->id }}?')">
                                             <i class="fas fa-trash-alt me-1"></i> Delete
                                         </button>
@@ -281,4 +289,5 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

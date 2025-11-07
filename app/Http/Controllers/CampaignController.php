@@ -44,8 +44,7 @@ class CampaignController extends Controller
             }
         }
 
-        $uniqueEmails = array_unique($validEmails);
-        if (empty($uniqueEmails)) {
+        if (empty($validEmails)) {
             return back()->withErrors(['emails' => 'No valid email addresses found in file.']);
         }
 
@@ -79,29 +78,30 @@ class CampaignController extends Controller
             'html_body' => $request->html_body,
             'smtp_input' => $request->smtp_input,
             'from_name' => $request->from_name ?? 'ZeusMailer',
-            'total_emails' => count($uniqueEmails),
+            'total_emails' => count($validEmails),
             'delay' => $request->delay ?? 1,
             'status' => 'running',
             'sent_emails' => [],
             'failed_emails' => [],
             'processed_emails' => [],
-            'all_emails' => $uniqueEmails,
+            'all_emails' => $validEmails, // ✅ Keep duplicates and order
             'current_index' => 0,
-            'log' => ['Campaign started with ' . count($uniqueEmails) . ' valid, unique emails'],
+            'log' => ['Campaign started with ' . count($validEmails) . ' valid emails (duplicates included)'],
             'queue_name' => 'campaign_' . uniqid(),
         ]);
 
         // === 4. DISPATCH JOBS ===
-        foreach ($uniqueEmails as $index => $email) {
+        foreach ($validEmails as $index => $email) {
             $smtp = $smtps[$index % count($smtps)];
             SendCampaignEmail::dispatch($email, $campaign->id, $smtp);
-            // ->onQueue($campaign->queue_name); // ⚡ no per-index delay
+            // ->onQueue($campaign->queue_name);
         }
 
         return redirect()
             ->route('campaign.show', $campaign->id)
-            ->with('success', "Campaign #{$campaign->id} queued! ({$campaign->total_emails} emails)");
+            ->with('success', "Campaign #{$campaign->id} queued! ({$campaign->total_emails} emails, duplicates allowed)");
     }
+
 
 
     public function show($id)

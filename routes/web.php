@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\SmtpTestController;
 
 Route::get('/', [CampaignController::class, 'index'])->name('campaign.index');
 Route::get('/campaign/create', [CampaignController::class, 'create'])->name('campaign.create');
@@ -13,6 +14,10 @@ Route::post('/campaign/{id}/toggle', [CampaignController::class, 'toggleStatus']
 Route::post('/campaign/{id}/update-smtps', [CampaignController::class, 'updateSmtps'])->name('campaign.update-smtps');
 Route::get('/campaign/{id}/export-failed', [CampaignController::class, 'exportFailedEmails'])
     ->name('campaign.export-failed');
-Route::post('/campaigns/{id}/update', [App\Http\Controllers\CampaignController::class, 'updateCampaign'])
+Route::post('/campaigns/{id}/update', [CampaignController::class, 'updateCampaign'])
     ->name('campaign.update');
 
+Route::get('/smtp/test', [SmtpTestController::class, 'index'])->name('smtp.test');
+Route::post('/smtp/start', [SmtpTestController::class, 'start']);
+Route::get('/smtp/poll/{batchId}', [SmtpTestController::class, 'poll']);
+Route::post('/smtp/run-next', [SmtpTestController::class, 'runNext']);
