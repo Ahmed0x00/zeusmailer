@@ -190,7 +190,7 @@
             const subject = document.getElementById('subject').value;
             const html_body = document.getElementById('html_body').value;
 
-            const res = await fetch('/smtp/start', {
+            const res = await fetch('/smtp/start/test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

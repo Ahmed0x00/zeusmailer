@@ -40,7 +40,7 @@
         textarea {
             font-family: monospace;
             resize: none;
-            min-height: 45vh;
+            height: 60vh;
         }
 
         .btn-primary {
@@ -61,6 +61,9 @@
         <a href="{{ url('/smtp/batches') }}" class="btn btn-light fw-semibold">
             <i class="fas fa-list me-1"></i> All Batches
         </a>
+        <a href="{{ route('campaign.index') }}" class="btn btn-light fw-semibold">
+                <i class="fas fa-arrow-left me-1"></i> Back to Campaigns
+            </a>
     </div>
 </div>
 

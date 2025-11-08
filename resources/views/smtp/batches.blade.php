@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>ZeusMailer - SMTP Batches</title>
@@ -56,95 +57,107 @@
             font-size: 0.8rem;
         }
 
-        .completed { background: #dcfce7; }
-        .running { background: #e0e7ff; }
+        .completed {
+            background: #dcfce7;
+        }
+
+        .running {
+            background: #e0e7ff;
+        }
     </style>
 </head>
+
 <body>
 
-<!-- HEADER -->
-<div class="header">
-    <div class="container d-flex justify-content-between align-items-center">
-        <h1 class="fs-4 m-0"><i class="fas fa-list me-2"></i> ZeusMailer - SMTP Batches</h1>
-        <a href="{{ url('/smtp') }}" class="btn btn-light fw-semibold">
-            <i class="fas fa-plus me-1"></i> New Batch
-        </a>
-    </div>
-</div>
-
-<!-- CONTENT -->
-<div class="container pb-5">
-    <div class="card">
-        <div class="card-header bg-primary bg-gradient text-white fw-semibold">
-            <i class="fas fa-database me-2"></i> All SMTP Check Batches
+    <!-- HEADER -->
+    <div class="header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="fs-4 m-0"><i class="fas fa-list me-2"></i> ZeusMailer - SMTP Batches</h1>
+            <a href="{{ url('/smtp') }}" class="btn btn-light fw-semibold">
+                <i class="fas fa-plus me-1"></i> New Batch
+            </a>
+            <a href="{{ route('campaign.index') }}" class="btn btn-light fw-semibold">
+                <i class="fas fa-arrow-left me-1"></i> Back to Campaigns
+            </a>
         </div>
+    </div>
 
-        <div class="card-body">
-            <div class="table-responsive border rounded">
-                <table class="table table-sm align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Total</th>
-                            <th>Processed</th>
-                            <th>Success</th>
-                            <th>Progress</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($batches as $batch)
-                            @php
-                                $percent = $batch->total > 0 ? round(($batch->processed / $batch->total) * 100) : 0;
-                                $done = $batch->processed >= $batch->total;
-                            @endphp
-                            <tr class="{{ $done ? 'completed' : 'running' }}">
-                                <td><code>{{ $batch->id }}</code></td>
-                                <td>{{ $batch->total }}</td>
-                                <td>{{ $batch->processed }}</td>
-                                <td class="text-success fw-semibold">{{ $batch->success }}</td>
-                                <td style="width: 160px;">
-                                    <div class="progress">
-                                        <div class="progress-bar {{ $done ? 'bg-success' : 'bg-primary' }}" 
-                                            style="width: {{ $percent }}%">
-                                            {{ $percent }}%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-pill {{ $done ? 'bg-success text-white' : 'bg-warning text-dark' }}">
-                                        {{ $done ? 'Completed' : 'Running' }}
-                                    </span>
-                                </td>
-                                <td>{{ $batch->created_at->format('Y-m-d H:i') }}</td>
-                                <td>
-                                    <a href="{{ url('/smtp/batch/'.$batch->id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye me-1"></i> View
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
+    <!-- CONTENT -->
+    <div class="container pb-5">
+        <div class="card">
+            <div class="card-header bg-primary bg-gradient text-white fw-semibold">
+                <i class="fas fa-database me-2"></i> All SMTP Check Batches
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive border rounded">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
-                                    <i class="fas fa-inbox fa-lg mb-2"></i><br>
-                                    No batches found yet.
-                                </td>
+                                <th>ID</th>
+                                <th>Total</th>
+                                <th>Processed</th>
+                                <th>Success</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            @forelse($batches as $batch)
+                                @php
+                                    $percent = $batch->total > 0 ? round(($batch->processed / $batch->total) * 100) : 0;
+                                    $done = $batch->processed >= $batch->total;
+                                @endphp
+                                <tr class="{{ $done ? 'completed' : 'running' }}">
+                                    <td><code>{{ $batch->id }}</code></td>
+                                    <td>{{ $batch->total }}</td>
+                                    <td>{{ $batch->processed }}</td>
+                                    <td class="text-success fw-semibold">{{ $batch->success }}</td>
+                                    <td style="width: 160px;">
+                                        <div class="progress">
+                                            <div class="progress-bar {{ $done ? 'bg-success' : 'bg-primary' }}"
+                                                style="width: {{ $percent }}%">
+                                                {{ $percent }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="status-pill {{ $done ? 'bg-success text-white' : 'bg-warning text-dark' }}">
+                                            {{ $done ? 'Completed' : 'Running' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $batch->created_at->format('Y-m-d H:i') }}</td>
+                                    <td>
+                                        <a href="{{ url('/smtp/batch/' . $batch->id) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-lg mb-2"></i><br>
+                                        No batches found yet.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="mt-3">
-                {{ $batches->links() }}
+                <div class="mt-3">
+                    {{ $batches->links() }}
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

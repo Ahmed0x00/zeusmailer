@@ -69,6 +69,9 @@
             <a href="{{ url('/smtp') }}" class="btn btn-light fw-semibold">
                 <i class="fas fa-plus me-1"></i> New Batch
             </a>
+            <a href="{{ route('campaign.index') }}" class="btn btn-light fw-semibold">
+                <i class="fas fa-arrow-left me-1"></i> Back to Campaigns
+            </a>
         </div>
     </div>
 </div>
